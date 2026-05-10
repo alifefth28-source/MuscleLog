@@ -119,18 +119,21 @@ Berikan analisis dalam format berikut (gunakan bahasa Indonesia yang mudah dipah
 
 Jangan terlalu panjang. Maksimal 200 kata. Gunakan angka dari data, bukan generalisasi.`;
 
-    // Call Claude API
-    const aiResponse = await fetch("https://api.anthropic.com/v1/messages", {
+    // Call Gemini API
+    const geminiApiKey = import.meta.env.GEMINI_API_KEY || "";
+    const aiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": import.meta.env.ANTHROPIC_API_KEY || "",
-        "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 500,
-        messages: [{ role: "user", content: prompt }],
+        contents: [{
+          role: "user",
+          parts: [{ text: prompt }]
+        }],
+        generationConfig: {
+          maxOutputTokens: 500,
+        }
       }),
     });
 
@@ -144,7 +147,8 @@ Jangan terlalu panjang. Maksimal 200 kata. Gunakan angka dari data, bukan genera
     }
 
     const aiData = await aiResponse.json();
-    const aiText = aiData.content?.[0]?.text || "";
+    // Struktur response objek dari Gemini berbeda dengan Claude
+    const aiText = aiData.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
     return new Response(JSON.stringify({ summary: aiText, isAI: true }), {
       status: 200,
