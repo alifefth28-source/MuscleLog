@@ -130,6 +130,52 @@ export default function SetLogger({ userId, userName }: Props) {
     return null;
   };
 
+  // Session type guide for beginners
+  const SESSION_GUIDES: Record<string, { otot: string; gerakan: string[]; tips: string }> = {
+    "Push Day": {
+      otot: "Dada, Bahu, Trisep",
+      gerakan: ["Bench Press", "Incline Bench Press", "Overhead Press", "Lateral Raise", "Tricep Pushdown", "Dumbbell Fly"],
+      tips: "Mulai dari gerakan compound berat (Bench Press) lalu lanjut ke isolation. 3-4 set per gerakan, RPE 7-8."
+    },
+    "Pull Day": {
+      otot: "Punggung, Bisep, Rear Delt",
+      gerakan: ["Deadlift", "Barbell Row", "Lat Pulldown", "Seated Cable Row", "Bicep Curl", "Face Pull"],
+      tips: "Fokus tarik dari siku, bukan tangan. Deadlift di awal saat energi masih penuh. 3-4 set per gerakan."
+    },
+    "Leg Day": {
+      otot: "Paha Depan, Paha Belakang, Bokong, Betis",
+      gerakan: ["Squat", "Leg Press", "Romanian Deadlift", "Leg Extension", "Leg Curl", "Calf Raise"],
+      tips: "Squat adalah raja gerakan kaki. Pastikan pemanasan lutut yang cukup. 3-5 set untuk compound."
+    },
+    "Upper Body": {
+      otot: "Dada, Punggung, Bahu, Lengan",
+      gerakan: ["Bench Press", "Barbell Row", "Overhead Press", "Lat Pulldown", "Bicep Curl", "Tricep Pushdown"],
+      tips: "Kombinasi push dan pull dalam satu sesi. Selang-seling gerakan push dan pull untuk efisiensi waktu."
+    },
+    "Lower Body": {
+      otot: "Paha Depan, Paha Belakang, Bokong, Betis",
+      gerakan: ["Squat", "Romanian Deadlift", "Leg Press", "Bulgarian Split Squat", "Leg Curl", "Calf Raise"],
+      tips: "Prioritaskan compound movements. Istirahat 2-3 menit antar set berat untuk pemulihan optimal."
+    },
+    "Full Body": {
+      otot: "Seluruh tubuh — Dada, Punggung, Kaki, Bahu, Lengan",
+      gerakan: ["Squat", "Bench Press", "Barbell Row", "Overhead Press", "Bicep Curl", "Plank"],
+      tips: "Pilih 1-2 gerakan per kelompok otot. Cocok untuk pemula yang latihan 2-3x per minggu."
+    },
+    "Chest & Triceps": {
+      otot: "Dada (Pectoralis Major), Trisep",
+      gerakan: ["Bench Press", "Incline Bench Press", "Dumbbell Fly", "Cable Crossover", "Tricep Pushdown", "Skull Crusher"],
+      tips: "Dada dulu (compound), baru trisep (isolation). Trisep sudah bekerja saat gerakan dada, jadi 2-3 gerakan trisep cukup."
+    },
+    "Back & Biceps": {
+      otot: "Punggung (Latissimus, Rhomboid), Bisep",
+      gerakan: ["Deadlift", "Barbell Row", "Lat Pulldown", "Seated Cable Row", "Bicep Curl", "Hammer Curl"],
+      tips: "Punggung dulu (compound berat), baru bisep (isolation). Bisep sudah bekerja saat gerakan tarik, 2-3 gerakan cukup."
+    },
+  };
+
+  const activeGuide = SESSION_GUIDES[sessionName] || null;
+
   // ======== STEP 1: Nama Sesi ========
   if (step === "name") {
     return (
@@ -144,6 +190,40 @@ export default function SetLogger({ userId, userName }: Props) {
             <button key={name} onClick={() => setSessionName(name)} className={`px-3 py-1.5 text-xs rounded-lg border active:scale-95 transition-all ${sessionName === name ? "bg-[#3B82F6]/10 border-[#3B82F6]/40 text-[#60A5FA]" : "bg-white/[0.04] border-white/[0.08] text-[#8892A6]"}`}>{name}</button>
           ))}
         </div>
+
+        {/* Session Guide Panel */}
+        {activeGuide && (
+          <div className="mt-5 rounded-2xl p-4" style={{background:"rgba(59,130,246,0.05)",border:"0.5px solid rgba(59,130,246,0.15)"}}>
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-[#3B82F6]"><IconInfo /></span>
+              <h3 className="text-sm font-bold text-[#60A5FA]">{sessionName}</h3>
+            </div>
+            <div className="space-y-3 text-[12px] leading-relaxed">
+              {/* Target otot */}
+              <div>
+                <p className="text-[10px] text-[#8892A6] uppercase tracking-wider mb-1">Target Otot</p>
+                <p className="text-[#60A5FA]/90 font-medium">{activeGuide.otot}</p>
+              </div>
+              {/* Gerakan rekomendasi */}
+              <div>
+                <p className="text-[10px] text-[#8892A6] uppercase tracking-wider mb-1.5">Gerakan yang Direkomendasikan</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {activeGuide.gerakan.map(g => (
+                    <span key={g} className="text-[11px] px-2.5 py-1 rounded-lg text-[#60A5FA] font-medium" style={{background:"rgba(59,130,246,0.1)",border:"0.5px solid rgba(59,130,246,0.2)"}}>{g}</span>
+                  ))}
+                </div>
+              </div>
+              {/* Tips */}
+              <div className="rounded-xl p-3" style={{background:"rgba(16,185,129,0.05)",border:"0.5px solid rgba(16,185,129,0.12)"}}>
+                <div className="flex items-start gap-2">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0 mt-0.5"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                  <p className="text-[11px] text-[#10B981]/80">{activeGuide.tips}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <button onClick={handleCreateSession} disabled={!sessionName.trim() || loading} className="w-full mt-6 bg-[#3B82F6] text-white font-bold rounded-xl px-6 py-3.5 text-sm active:scale-[0.97] disabled:opacity-40 transition-all flex items-center justify-center gap-2" style={{boxShadow:"0 0 20px rgba(59,130,246,0.3)"}}>
           {loading ? "Membuat..." : <><span>Lanjut Pilih Gerakan</span> <IconArrowRight /></>}
         </button>
