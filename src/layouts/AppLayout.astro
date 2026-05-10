@@ -1,0 +1,19 @@
+---
+import BaseLayout from "./BaseLayout.astro";
+import NavBar from "@/components/ui/NavBar.astro";
+
+export interface Props {
+  title?: string;
+  activeNav?: "home" | "log" | "analytics" | "profile";
+  hideNav?: boolean;
+}
+
+const { title, activeNav = "home", hideNav = false } = Astro.props;
+---
+
+<BaseLayout title={title}>
+  <main class="pb-20 max-w-lg mx-auto px-4">
+    <slot />
+  </main>
+  {!hideNav && <NavBar active={activeNav} />}
+</BaseLayout>

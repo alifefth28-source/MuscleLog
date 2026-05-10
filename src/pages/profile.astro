@@ -1,0 +1,78 @@
+---
+import AppLayout from "@/layouts/AppLayout.astro";
+import { getSession } from "@/lib/auth";
+
+const session = getSession(Astro.request);
+if (!session) return Astro.redirect("/login");
+---
+
+<AppLayout title="Profil — MuscleLog" activeNav="profile">
+  <div class="pt-6 pb-4">
+    <h1 class="text-xl font-extrabold">Profil</h1>
+  </div>
+
+  <!-- User Info -->
+  <div class="glass-strong flex items-center gap-4 mb-4 p-4">
+    <div class="w-14 h-14 rounded-full flex items-center justify-center text-ml-accent text-xl font-bold glow-accent" style="background: rgba(59,130,246,0.15); border: 0.5px solid rgba(59,130,246,0.3);">
+      {session.nama.charAt(0).toUpperCase()}
+    </div>
+    <div>
+      <p class="font-bold text-lg">{session.nama}</p>
+      <p class="text-sm text-ml-subtle">{session.email}</p>
+      <span class="badge badge-accent text-[10px] mt-1 inline-block">Anggota MuscleLog</span>
+    </div>
+  </div>
+
+  <!-- Menu Items -->
+  <div class="space-y-2">
+    <a href="/history" class="card-elevated flex items-center justify-between">
+      <span class="text-sm">Riwayat Latihan</span>
+      <span class="text-ml-subtle text-xs">→</span>
+    </a>
+    <a href="/analytics" class="card-elevated flex items-center justify-between">
+      <span class="text-sm">Analitik</span>
+      <span class="text-ml-subtle text-xs">→</span>
+    </a>
+  </div>
+
+  <!-- Logout -->
+  <button
+    id="logout-btn"
+    class="btn-secondary w-full mt-8 text-red-400 border-red-900/50"
+  >
+    Keluar
+  </button>
+
+  <!-- Logout confirmation modal -->
+  <div id="logout-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 px-6">
+    <div class="bg-ml-card rounded-2xl p-5 max-w-sm w-full">
+      <h3 class="text-base font-bold text-white mb-2">Keluar dari akun?</h3>
+      <p class="text-sm text-ml-muted mb-4">Kamu perlu login kembali untuk mengakses data latihanmu.</p>
+      <div class="flex gap-2">
+        <button id="logout-cancel" class="flex-1 bg-ml-surface text-white font-semibold rounded-xl py-2.5 text-sm">Batal</button>
+        <button id="logout-confirm" class="flex-1 bg-red-600 text-white font-semibold rounded-xl py-2.5 text-sm">Ya, Keluar</button>
+      </div>
+    </div>
+  </div>
+
+  <p class="text-center text-[10px] text-ml-subtle mt-8">
+    MuscleLog v1.0 · Stagnation Detector
+  </p>
+</AppLayout>
+
+<script is:inline>
+  const modal = document.getElementById('logout-modal');
+  document.getElementById('logout-btn').addEventListener('click', () => {
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+  });
+  document.getElementById('logout-cancel').addEventListener('click', () => {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  });
+  document.getElementById('logout-confirm').addEventListener('click', async () => {
+    document.cookie = 'ml_token=; Path=/; Max-Age=0; SameSite=Lax;';
+    await fetch('/api/auth/logout', { method: 'POST' });
+    window.location.href = '/login';
+  });
+</script>

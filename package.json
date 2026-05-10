@@ -1,0 +1,38 @@
+{
+  "name": "xxv-fitness-logbook",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "Aplikasi Web Logbook Latihan Beban dengan Stagnation Detector - XXV Fitness",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "seed": "node src/db/seed.js"
+  },
+  "dependencies": {
+    "astro": "^4.16.0",
+    "@astrojs/react": "^3.6.0",
+    "@astrojs/vercel": "^7.8.0",
+    "@astrojs/tailwind": "^5.1.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "firebase": "^11.0.0",
+    "firebase-admin": "^12.6.0",
+    "jsonwebtoken": "^9.0.2",
+    "bcryptjs": "^2.4.3",
+    "recharts": "^2.13.0",
+    "zod": "^3.23.0",
+    "cookie": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "@types/jsonwebtoken": "^9.0.0",
+    "@types/bcryptjs": "^2.4.0",
+    "@types/cookie": "^0.6.0",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.6.0"
+  }
+}

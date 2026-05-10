@@ -1,0 +1,25 @@
+---
+export interface Props {
+  namaSesi: string;
+  tanggal: string;
+  durasiMenit?: number;
+  isClosed: boolean;
+  href: string;
+}
+
+const { namaSesi, tanggal, durasiMenit, isClosed, href } = Astro.props;
+---
+
+<a href={href} class="card-elevated flex items-center justify-between">
+  <div>
+    <p class="text-sm font-semibold">{namaSesi}</p>
+    <p class="text-xs text-ml-subtle">{tanggal}</p>
+  </div>
+  <div class="text-right">
+    {isClosed ? (
+      <p class="text-xs text-ml-subtle">{durasiMenit} menit</p>
+    ) : (
+      <span class="badge badge-accent text-[10px]">Aktif</span>
+    )}
+  </div>
+</a>

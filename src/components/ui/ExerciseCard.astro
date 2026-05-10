@@ -1,0 +1,22 @@
+---
+export interface Props {
+  nama: string;
+  targetOtot: string;
+  kategori: string;
+  totalVolumeLoad?: number;
+}
+
+const { nama, targetOtot, kategori, totalVolumeLoad } = Astro.props;
+---
+
+<div class="card flex items-center justify-between">
+  <div>
+    <p class="text-sm font-semibold">{nama}</p>
+    <p class="text-[10px] text-ml-subtle">{targetOtot} · {kategori}</p>
+  </div>
+  {totalVolumeLoad && (
+    <span class="text-sm text-ml-accent font-bold">
+      VL: {totalVolumeLoad.toLocaleString()}
+    </span>
+  )}
+</div>

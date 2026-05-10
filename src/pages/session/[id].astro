@@ -1,0 +1,140 @@
+---
+import AppLayout from "@/layouts/AppLayout.astro";
+import { getSession as getAuthSession } from "@/lib/auth";
+import { getSessionById, getSessionLogs, getExerciseById } from "@/lib/db";
+import AISummary from "@/components/islands/AISummary";
+
+const authSession = getAuthSession(Astro.request);
+if (!authSession) return Astro.redirect("/login");
+
+const { id } = Astro.params;
+if (!id) return Astro.redirect("/");
+
+const workoutSession = await getSessionById(id);
+if (!workoutSession) return Astro.redirect("/");
+
+const logs = await getSessionLogs(id);
+
+// Group logs by exercise
+const grouped = new Map<string, { exerciseName: string; targetOtot: string; logs: typeof logs }>();
+for (const log of logs) {
+  if (!grouped.has(log.exerciseId)) {
+    const ex = await getExerciseById(log.exerciseId);
+    grouped.set(log.exerciseId, { exerciseName: ex?.nama || "Unknown", targetOtot: ex?.targetOtot || "", logs: [] });
+  }
+  grouped.get(log.exerciseId)!.logs.push(log);
+}
+
+// Calculate session stats
+const totalVL = logs.reduce((s, l) => s + l.volumeLoad, 0);
+const totalSets = logs.length;
+const best1RM = logs.length > 0 ? Math.max(...logs.map(l => l.estimasi1rm)) : 0;
+const best1RMExercise = logs.length > 0 ? (() => { const bestLog = logs.reduce((a, b) => a.estimasi1rm > b.estimasi1rm ? a : b); const ex = [...grouped.entries()].find(([k]) => k === bestLog.exerciseId); return ex?.[1].exerciseName || "—"; })() : "—";
+const avgRpe = logs.length > 0 ? Math.round((logs.reduce((s, l) => s + l.skorRpe, 0) / logs.length) * 10) / 10 : 0;
+const avgRir = Math.round((10 - avgRpe) * 10) / 10;
+const exerciseCount = grouped.size;
+const tanggalStr = workoutSession.tanggal?.toDate ? workoutSession.tanggal.toDate().toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric" }) : "—";
+---
+
+<AppLayout title={`${workoutSession.namaSesi} — MuscleLog`} activeNav="log">
+  <!-- Header -->
+  <div class="pt-6 pb-4">
+    <a href="/" class="inline-flex items-center gap-1.5 text-xs text-[#8892A6] hover:text-[#bbb]">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+      Kembali
+    </a>
+    <h1 class="text-xl font-extrabold mt-2 text-white">{workoutSession.namaSesi}</h1>
+    <div class="flex items-center gap-2 mt-1">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8892A6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <p class="text-sm text-[#8892A6]">{tanggalStr}</p>
+      {workoutSession.isClosed && (
+        <span class="text-sm text-[#8892A6]">· {workoutSession.durasiMenit} menit</span>
+      )}
+    </div>
+    {!workoutSession.isClosed && (
+      <span class="inline-block mt-2 text-[10px] px-2.5 py-1 rounded-full font-semibold text-[#3B82F6]" style="background: rgba(59,130,246,0.12);">Sesi Aktif</span>
+    )}
+  </div>
+
+  <!-- Session Stats Summary -->
+  {logs.length > 0 && (
+    <div class="grid grid-cols-2 gap-3 mb-4">
+      <div class="glass p-3">
+        <p class="text-[10px] text-[#8892A6] uppercase tracking-wide mb-1">Total Volume Load</p>
+        <p class="text-2xl font-extrabold text-[#3B82F6]">{Math.round(totalVL).toLocaleString()}</p>
+        <p class="text-[10px] text-[#8892A6] mt-0.5">{totalSets} set · {exerciseCount} gerakan</p>
+      </div>
+      <div class="glass p-3">
+        <p class="text-[10px] text-[#8892A6] uppercase tracking-wide mb-1">Estimasi 1RM Terkuat</p>
+        <p class="text-2xl font-extrabold text-white">{Math.round(best1RM)} <span class="text-sm text-[#8892A6] font-normal">kg</span></p>
+        <p class="text-[10px] text-[#3B82F6] mt-0.5">{best1RMExercise}</p>
+      </div>
+    </div>
+  )}
+
+  {logs.length > 0 && (
+    <div class="grid grid-cols-3 gap-3 mb-4">
+      <div class="glass p-3 text-center">
+        <p class="text-[9px] text-[#8892A6] uppercase tracking-wide mb-1">RPE Avg</p>
+        <p class="text-xl font-extrabold text-[#60A5FA]">{avgRpe}</p>
+      </div>
+      <div class="glass p-3 text-center">
+        <p class="text-[9px] text-[#8892A6] uppercase tracking-wide mb-1">RIR Avg</p>
+        <p class="text-xl font-extrabold text-white">{avgRir}</p>
+      </div>
+      <div class="glass p-3 text-center">
+        <p class="text-[9px] text-[#8892A6] uppercase tracking-wide mb-1">Durasi</p>
+        <p class="text-xl font-extrabold text-white">{workoutSession.durasiMenit}<span class="text-[10px] text-[#8892A6] font-normal ml-0.5">mnt</span></p>
+      </div>
+    </div>
+  )}
+
+  <!-- Exercise Groups -->
+  {logs.length > 0 && <h2 class="section-title mt-2">Detail per Gerakan</h2>}
+
+  {[...grouped.entries()].map(([exId, data]) => {
+    const totalVl = data.logs.reduce((s, l) => s + l.volumeLoad, 0);
+    const exBest1rm = Math.max(...data.logs.map(l => l.estimasi1rm));
+    const exAvgRpe = (data.logs.reduce((s, l) => s + l.skorRpe, 0) / data.logs.length).toFixed(1);
+    return (
+      <div class="glass mb-3 p-4">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <h3 class="font-bold text-sm text-white">{data.exerciseName}</h3>
+            <p class="text-xs text-[#8892A6]">{data.targetOtot}</p>
+          </div>
+          <div class="text-right">
+            <span class="text-xs text-[#3B82F6] font-semibold">VL: {Math.round(totalVl).toLocaleString()}</span>
+            <p class="text-[10px] text-[#8892A6]">1RM: {Math.round(exBest1rm)} kg · RPE: {exAvgRpe}</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-5 text-[10px] text-[#8892A6] uppercase tracking-wide mb-1 px-1">
+          <span>Set</span><span class="text-center">Beban</span><span class="text-center">Reps</span><span class="text-center">RPE</span><span class="text-right">VL</span>
+        </div>
+        {data.logs.map((log) => (
+          <div class="grid grid-cols-5 items-center py-1.5 px-1 rounded-lg mb-1 text-sm" style="background: rgba(255,255,255,0.03);">
+            <span class="text-[#8892A6]">{log.setKe}</span>
+            <span class="text-center font-semibold text-white">{log.bebanKg}kg</span>
+            <span class="text-center text-[#E8ECF4]">{log.repetisi}</span>
+            <span class="text-center text-[#60A5FA]">{log.skorRpe}</span>
+            <span class="text-right text-[#3B82F6] font-semibold">{Math.round(log.volumeLoad)}</span>
+          </div>
+        ))}
+      </div>
+    );
+  })}
+
+  <!-- AI Summary -->
+  {logs.length > 0 && workoutSession.isClosed && (
+    <AISummary client:load sessionId={id} />
+  )}
+
+  <!-- Empty State -->
+  {logs.length === 0 && (
+    <div class="text-center py-12 text-[#8892A6]">
+      <svg class="mx-auto mb-2" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><path d="M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      <p>Belum ada data latihan di sesi ini.</p>
+    </div>
+  )}
+</AppLayout>
