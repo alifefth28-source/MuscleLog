@@ -1,4 +1,4 @@
-# XXV Fitness Logbook 🏋️
+# XXV Fitness Logbook
 
 **Aplikasi Web Logbook Latihan Beban dengan Stagnation Detector**
 
